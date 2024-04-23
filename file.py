@@ -1,7 +1,6 @@
-import json
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
-from Crypto.Random import get_random_bytes
+import hashlib
 import binascii
 
 
@@ -70,7 +69,10 @@ def decrypt(cipher_text, key):
     iv = cipher_text[:16]
     cipher_text = cipher_text[16:]
     cipher = AES.new(key, AES.MODE_CBC, iv = iv)
-    plain_text = unpad(cipher.decrypt(cipher_text), AES.block_size)
+    try:
+        plain_text = unpad(cipher.decrypt(cipher_text), AES.block_size)
+    except ValueError:
+        return "Password incorrect, please log out and try again."
     return plain_text.decode()
 
 
@@ -97,7 +99,9 @@ def main():
             print("Password is not commonly used. Good to go!")
             break
 
-    key = get_random_bytes(16)
+    salt = b'totalrandomsalt' 
+    key = hashlib.pbkdf2_hmac('sha256', user_input.encode(), salt, 100000)  
+    key = key[:16]
     
     print("Welcome to the File Management System!")
 
