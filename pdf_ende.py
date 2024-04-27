@@ -1,33 +1,43 @@
-from PyPDF2 import PdfWriter, PdfReader 
+from PyPDF2 import PdfWriter, PdfReader
 
-def pdf_encrypt(filepath, passwd):
-    reader = PdfReader(filepath)
-    writer = PdfWriter()
+def pdf_encrypt(passwd):
+    try:
+        filepath = input('Enter the absolute path of the pdf: ')
+        reader = PdfReader(filepath)
+        writer = PdfWriter()
+        # check if the pdf is encrypted
+        if reader.is_encrypted:
+            print("PDF is already encrypted.")
+            return
+        for page in reader.pages:
+            writer.add_page(page)
+        # add password to the pdf
+        writer.encrypt(passwd)
+        with open(filepath, "wb") as f:
+            writer.write(f)
+        print("PDF encrypted successfully.")
+    except FileNotFoundError:
+        print('File not found...')
 
-    for page in reader.pages:
-        writer.add_page(page)
-
-    writer.encrypt(passwd)
-    with open(filepath, "wb") as f:
-        writer.write(f)
-
-def pdf_decrypt(filepath, passwd):
-    reader = PdfReader(filepath)
-    writer = PdfWriter()
-
-    if reader.is_encrypted:
-        reader.decrypt(passwd)
-
-    # Add all pages to the writer
-    for page in reader.pages:
-        writer.add_page(page)
-
-    # Save the new PDF to a file
-    with open(filepath, "wb") as f:
-        writer.write(f)
-
-if __name__ == "__main__":
-    passwd = input("Enter the password for the pdf file: ")
-    filepath = input("Enter the absolute path of the pdf file: ") #check the input?
-    pdf_encrypt(filepath, passwd)
-    pdf_decrypt(filepath, passwd)
+def pdf_decrypt(passwd):
+    try:
+        filepath = input('Enter the absolute path of the PDF: ')
+        reader = PdfReader(filepath)
+        writer = PdfWriter()
+        # check if the PDF is encrypted
+        if reader.is_encrypted:
+            # decrypt the pdf with provided password
+            if reader.decrypt(passwd):
+                # add all pages to the writer
+                for page in reader.pages:
+                    writer.add_page(page)
+                # save the new PDF to a file
+                with open(filepath, "wb") as f:
+                    writer.write(f)
+                print("PDF decrypted successfully.")
+            else:
+                print("Incorrect password.")
+        else:
+            print("PDF is not encrypted or has already been decrypted.")
+    except FileNotFoundError:
+        print('File not found...')
