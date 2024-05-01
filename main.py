@@ -1,3 +1,4 @@
+import os
 import hashlib
 from text_ende import create_entry, append_entry, read_entry
 from image_ende import image_encrypt, image_decrypt
@@ -11,6 +12,7 @@ def load_passwords_from_txt(file_path):
 
 def check_password(user_input, passwords):
     return user_input in passwords
+
 
 def main():
     # Load passwords
@@ -28,8 +30,14 @@ def main():
     salt = b'totalrandomsalt' 
     key = hashlib.pbkdf2_hmac('sha256', user_input.encode(), salt, 100000)  
     key = key[:16]
-    
+
     print("Welcome to the File Management System!")
+
+    # Check if the key file exists
+    if os.path.exists('key.bin'):
+        # Read the key from the file
+        with open('key.bin', 'rb') as key_file:
+            key = key_file.read()
 
     # While loop for operations
     while True:
@@ -41,6 +49,7 @@ def main():
         print("4. Audio file")
         print("5. Exit")
         filetype = input("Enter the number of the file type you would like to manage:")
+        
         if filetype == "1":
             print("\nChoose an operation:")
             print("(x) : Return to main menu")
@@ -58,6 +67,7 @@ def main():
                 append_entry(key)
             else:
                 print("ERROR: Invalid input. Choose again.")
+        
         elif filetype == "2":
             print("\nChoose an operation:")
             print("(x) : Return to main menu")
@@ -67,11 +77,12 @@ def main():
             if choice == 'x':
                 continue
             elif choice == 'e':
-                image_encrypt()
+                image_encrypt(key)
             elif choice == 'd':
-                image_decrypt()
+                image_decrypt(key)
             else:
                 print("ERROR: Invalid input. Choose again.")
+       
         elif filetype == "3":
             print("\nChoose an operation:")
             print("(x) : Return to main menu")
@@ -86,6 +97,7 @@ def main():
                 pdf_decrypt(user_input)
             else:
                 print("ERROR: Invalid input. Choose again.")
+        
         elif filetype == "4":
             print("\nChoose an operation:")
             print("(x) : Return to main menu")
@@ -100,6 +112,7 @@ def main():
                 print("Audio file management is not supported in this version.")
             else:
                 print("Audio file management is not supported in this version.")
+        
         elif filetype == "5":
             print("Exiting the File Management System. Goodbye!")
             break

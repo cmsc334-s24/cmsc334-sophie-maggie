@@ -1,6 +1,6 @@
 from PyPDF2 import PdfWriter, PdfReader
 
-def pdf_encrypt(passwd):
+def pdf_encrypt(key):
     try:
         filepath = input('Enter the absolute path of the pdf: ')
         reader = PdfReader(filepath)
@@ -12,14 +12,15 @@ def pdf_encrypt(passwd):
         for page in reader.pages:
             writer.add_page(page)
         # add password to the pdf
-        writer.encrypt(passwd)
+        writer.encrypt(key)
         with open(filepath, "wb") as f:
             writer.write(f)
         print("PDF encrypted successfully.")
     except FileNotFoundError:
         print('File not found...')
 
-def pdf_decrypt(passwd):
+
+def pdf_decrypt(key):
     try:
         filepath = input('Enter the absolute path of the PDF: ')
         reader = PdfReader(filepath)
@@ -27,7 +28,7 @@ def pdf_decrypt(passwd):
         # check if the PDF is encrypted
         if reader.is_encrypted:
             # decrypt the pdf with provided password
-            if reader.decrypt(passwd):
+            if reader.decrypt(key):
                 # add all pages to the writer
                 for page in reader.pages:
                     writer.add_page(page)
