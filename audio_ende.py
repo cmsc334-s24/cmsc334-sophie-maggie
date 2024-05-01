@@ -1,48 +1,100 @@
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
-import wave
+from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import base64
+import os
 
-def audio_encrypt(input_file, output_file, key):
-    # Read audio data
-    with wave.open(input_file, 'rb') as wav:
-        audio_data = wav.readframes(wav.getnframes())
+# helper function: convert the password to a Fernet key
+def derive_key_from_password(password):
+    password_bytes = password.encode()
+    salt = b'salt_'
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32, 
+        salt=salt,
+        iterations=100000,
+        backend=default_backend()
+    )
+    key = kdf.derive(password_bytes)
+    return base64.urlsafe_b64encode(key) # convert key to base64-encoded URL-safe string
 
-    # Encrypt audio data
-    cipher = AES.new(key, AES.MODE_EAX)
-    nonce = cipher.nonce
-    ciphertext, tag = cipher.encrypt_and_digest(audio_data)
+# helpful function: check if a file has the .encrypted extension
+def is_encrypted(path):
+    filename, extension = os.path.splitext(path)
+    return extension == '.encrypted'
 
-    # Write encrypted data to output file
-    with open(output_file, 'wb') as f:
-        f.write(nonce)
-        f.write(tag)
-        f.write(ciphertext)
+def audio_encrypt(password):
+    try:
+        # take path of audio file as a input
+        path = input(r'Enter path of Audio file : ')
 
-def audio_decrypt(input_file, output_file, key):
-    # Read encrypted data
-    with open(input_file, 'rb') as f:
-        nonce = f.read(16)
-        tag = f.read(16)
-        ciphertext = f.read()
+        # Check if file is already encrypted
+        if is_encrypted(path):
+            print("File is already encrypted.")
+            return
+        
+        fin = open(path, 'rb')
+        audio = fin.read()
+        fin.close()
 
-    # Decrypt data
-    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-    decrypted_data = cipher.decrypt_and_verify(ciphertext, tag)
+        key = derive_key_from_password(password)
+        cipher_suite = Fernet(key)
 
-    # Write decrypted audio data to output file
-    with wave.open(output_file, 'wb') as wav:
-        wav.setparams((1, 2, 44100, 0, 'NONE', 'not compressed'))
-        wav.writeframes(decrypted_data)
+        encrypted_audio = cipher_suite.encrypt(audio)
+        fin = open(path + '.encrypted', 'wb')
+        fin.write(encrypted_audio)
+        fin.close()
 
-# Example usage:
-input_audio_file = 'input_audio.wav'
-output_encrypted_file = 'encrypted_audio.enc'
-output_decrypted_file = 'decrypted_audio.wav'
-encryption_key = get_random_bytes(16)  # 16 bytes key for AES-128
-print(encryption_key)
+        print('Encryption Done...')
 
-# # Encrypt the audio file
-# audio_encrypt(input_audio_file, output_encrypted_file, encryption_key)
+        user_input = input("Do you want to delete the original file? (y/n): ")
+        while user_input.lower() not in ['y', 'n']:
+            print('Invalid input. Please enter y or n.')
+            user_input = input("Do you want to delete the original file? (y/n): ")
+        if user_input.lower() == 'y':
+            os.remove(path)
+            print('Original file deleted.')
+        elif user_input.lower() == 'n':
+            print('Original file not deleted.')
+    except FileNotFoundError:
+        print('File not found...')
 
-# # Decrypt the encrypted audio file
-# audio_decrypt(output_encrypted_file, output_decrypted_file, encryption_key)
+def audio_decrypt(password):
+    try:
+        path = input(r'Enter path of Audio file : ')
+        
+        fin = open(path, 'rb')
+        # Check if file is encrypted
+        if not is_encrypted(path):
+            print("File is not encrypted.")
+            return
+        audio = fin.read()
+        fin.close()
+
+        key = derive_key_from_password(password)
+
+        # Validate key format
+        try:
+            cipher_suite = Fernet(key)
+        except ValueError:
+            print('Invalid key format. Key must be 32 url-safe base64-encoded bytes.')
+            return
+
+        try:
+            decrypted_audio = cipher_suite.decrypt(audio)
+            fin = open(path.replace('.encrypted', ''), 'wb')
+            fin.write(decrypted_audio)
+            fin.close()
+            print('Decryption Done...')
+
+            # Delete the encrypted file
+            os.remove(path)
+            print('Encrypted file deleted.')
+
+        except InvalidToken:
+            print('Wrong key provided... Decryption failed.')
+
+    except FileNotFoundError:
+        print('File not found...')
+
