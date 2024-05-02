@@ -63,4 +63,6 @@ https://www.ncsc.gov.uk/blog-post/passwords-passwords-everywhere
 
 https://pycryptodome.readthedocs.io/en/latest/src/cipher/cipher.html#
 
+https://cryptography.io/en/latest/fernet/
+
 
