@@ -24,7 +24,7 @@ def is_encrypted(path):
     filename, extension = os.path.splitext(path)
     return extension == '.encrypted'
 
-def audio_encrypt(password):
+def multimedia_encrypt(password):
     try:
         # take path of audio file as a input
         path = input(r'Enter path of Audio file : ')
@@ -34,20 +34,23 @@ def audio_encrypt(password):
             print("File is already encrypted.")
             return
         
+        # open the file and read it
         fin = open(path, 'rb')
         audio = fin.read()
         fin.close()
 
+        # get the key from the password and creqte a cipher suite to perform encryption
         key = derive_key_from_password(password)
         cipher_suite = Fernet(key)
-
         encrypted_audio = cipher_suite.encrypt(audio)
+
+        # open the file in write binary mode and write the encrypted file
         fin = open(path + '.encrypted', 'wb')
         fin.write(encrypted_audio)
         fin.close()
-
         print('Encryption Done...')
 
+        # Ask user if they want to delete the original file
         user_input = input("Do you want to delete the original file? (y/n): ")
         while user_input.lower() not in ['y', 'n']:
             print('Invalid input. Please enter y or n.')
@@ -57,10 +60,11 @@ def audio_encrypt(password):
             print('Original file deleted.')
         elif user_input.lower() == 'n':
             print('Original file not deleted.')
+    
     except FileNotFoundError:
         print('File not found...')
 
-def audio_decrypt(password):
+def multimedia_decrypt(password):
     try:
         path = input(r'Enter path of Audio file : ')
         
@@ -82,6 +86,7 @@ def audio_decrypt(password):
             return
 
         try:
+            # Decrypt the file and write the decrypted file
             decrypted_audio = cipher_suite.decrypt(audio)
             fin = open(path.replace('.encrypted', ''), 'wb')
             fin.write(decrypted_audio)
@@ -97,4 +102,3 @@ def audio_decrypt(password):
 
     except FileNotFoundError:
         print('File not found...')
-
