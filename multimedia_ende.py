@@ -26,8 +26,8 @@ def is_encrypted(path):
 
 def multimedia_encrypt(password):
     try:
-        # take path of audio file as a input
-        path = input(r'Enter path of Audio file : ')
+        # take path of the file as a input
+        path = input(r'Enter path of the file : ')
 
         # Check if file is already encrypted
         if is_encrypted(path):
@@ -66,7 +66,7 @@ def multimedia_encrypt(password):
 
 def multimedia_decrypt(password):
     try:
-        path = input(r'Enter path of Audio file : ')
+        path = input(r'Enter path of the file : ')
         
         fin = open(path, 'rb')
         # Check if file is encrypted
