@@ -52,6 +52,7 @@ def get_file_name():
     name = input("Please enter the file name without white spaces: ")
     return name
 
+
 # Encrypt function
 def encrypt(text, key):
     cipher = AES.new(key, AES.MODE_CBC)

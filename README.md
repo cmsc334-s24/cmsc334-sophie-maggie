@@ -42,9 +42,7 @@ Passwords: In addition to password checks, we plan to maintain a repository of c
 Our application is currently designed to store files and passwords locally. However, as our project evolves, we are open to integrating front-end and back-end improvements that may lead to alternative storage solutions, potentially incorporating cloud-based options to enhance accessibility.
 
 
-**Citation:**
 
-https://pycryptodome.readthedocs.io/en/latest/src/cipher/cipher.html#
 
 
 
